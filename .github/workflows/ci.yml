@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
@@ -23,10 +23,22 @@ jobs:
 
     - name: Install dependencies
       run: npm install
-      working-directory: devops-practice
+      working-directory: "devops-practice"
 
+    - name: Check Docker and Docker Compose versions
+      run: |
+        docker --version
+        docker compose version  # Usa docker compose en lugar de docker-compose
+
+    - name: Build and run Docker Compose
+      run: |
+        docker compose up --build -d  # Cambiar docker-compose a docker compose
+      working-directory: "devops-practice"
 
     - name: Run tests
-      run: npm test
+      run: docker exec devops-practice-container npm test
 
-
+    - name: Stop and clean Docker Compose
+      run: |
+        docker compose down  # Cambiar docker-compose a docker compose
+      working-directory: "devops-practice"

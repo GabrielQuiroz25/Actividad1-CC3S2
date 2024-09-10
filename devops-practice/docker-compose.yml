@@ -1,0 +1,12 @@
+
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3001:3001"  # La aplicación Node.js expuesta en el puerto 3001
+    environment:
+      - NODE_ENV=production
+    container_name: devops-practice-container  # Contenedor de la aplicación
+

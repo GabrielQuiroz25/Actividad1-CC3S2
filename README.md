@@ -44,7 +44,7 @@ REST** básica con un único endpoint que devuelve un mensaje de *"Hello, World!
     ```
 2. Instalamos las dependencias necesarias:
     ```
-    npm install express jest supertest`
+    npm install express jest supertest
     ```
 3. Creamos la estructura para nuestro proyecto:
     ```
@@ -199,5 +199,139 @@ Hasta este punto podemos ver que las pruebas se ejecutan correctamente:
      git push -u origin main
     ```
 
+#### Parte 2: Configuración de entrega continua (CD) con Docker
+
+- Crearemos un archivo Docker para contenerizar la aplicación:
+
+1. Creamos un archivo Dockerfile:
+
+    ```Dockerfile
+    # Usa la imagen oficial de Node.js
+    FROM node:14
+    
+    # Establece el directorio de trabajo en el contenedor
+    WORKDIR /app
+    
+    # Copia los archivos package.json y package-lock.json
+    COPY package*.json ./
+    
+    # Instala las dependencias
+    RUN npm install
+    
+    # Copia el resto de los archivos de la aplicación
+    COPY . .
+    
+    # Expone el puerto en el que la aplicación correrá
+    EXPOSE 3000
+    
+    # Comando para iniciar la aplicación
+    CMD ["node", "src/app.js"]
+    ```
+
+2. Construímos la imagen de Docker: 
+
+    ```
+    docker build -t devops-practice .
+
+    ```
+    
+    [![docker1.png](https://i.postimg.cc/9XwhhXQV/docker1.png)](https://postimg.cc/grp5yWhB)
+
+
+3. Corremos el contenedor localmente:
+
+    ```
+    docker run -d -p 3000:3000 devops-practice
+
+    ```
+    
+- Automatizamos el despliegue con GitHub Actions:
+
+    1. Actualizamos el archivo .github/workflows/ci.yml para construir y desplegar la imagen de Docker:
+    
+        ```
+        name: CI/CD Pipeline
+        
+        on:
+          push:
+            branches:
+              - main
+          pull_request:
+            branches:
+              - main
+      
+        jobs:
+          build:
+            runs-on: ubuntu-latest
+        
+            steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+        
+            - name: Set up Node.js
+              uses: actions/setup-node@v2
+              with:
+                node-version: '14'
+         
+            - name: Install dependencies
+              run: npm install
+         
+            - name: Run tests
+              run: npm test
+         
+            - name: Build Docker image
+              run: docker build -t devops-practice .
+         
+            - name: Run Docker container
+             run: docker run -d -p 3000:3000 devops-practice
+    
+        ```
+        
+     2. Verificamos que la aplicación se despliegue correctamente localmente usando Docker:        
+         - Abre un navegador web y accede a http://localhost:3000 para verificar que la aplicación esté 
+    funcionando.
+    [![docker2.png](https://i.postimg.cc/G28hVkfn/docker2.png)](https://postimg.cc/r0Tkttcf)
+    
+
 
 ### 3. Automatización
+
+ - Automatizamos la configuración y gestión del entorno local usando Docker Compose:
+
+1. Creamos un archivo docker-compose.yml:
+
+    ```yml
+    version: '3.8'
+    
+    services:
+      app:
+        build: .
+        ports:
+          - "3000:3000"  
+        environment:
+          - NODE_ENV=production
+    ```
+2. Corremos la aplicación usando Docker Compose:
+
+    ```
+    docker compose up --build -d
+
+    ```
+    [![docker3.png](https://i.postimg.cc/bNCYyVjf/docker3.png)](https://postimg.cc/RNtxGRFg)
+
+
+### 4. Documentación y evaluación
+
+- Se ha documentado el proceso seguido, desde la configuración del entorno hasta la creación del pipeline 
+CI/CD.
+
+
+- **Evaluación de la experiencia**: Reflexiona sobre los beneficios de tener un pipeline automatizado y cómo esto 
+reduce la fricción entre los equipos de desarrollo y operaciones.
+
+Tener un pipeline automatizado resulta ser muy beneficioso para la organización ya que la entrega del software se vuelve mucho más rápida y frecuente puesto que se eliminan procesos manuales y repetitivos. 
+Además, al automatizar las pruebas e implementaciones se reducen los errores que pueden ser cometidos al hacerlo manualmente, lo que resulta en una mayor consistencia en la calidad del software ya que el código se prueba automáticamente con cada cambio.
+
+Respecto a la fricción entre los equipos de desarrollo y operaciones se verían reducidas ya que el código es desarrollado y probado en un entorno similar o igual al entorno de producción por lo que se evitarían conflictos a la hora de enviar el código.
+
+
